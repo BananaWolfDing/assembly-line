@@ -4,7 +4,7 @@ from Machine import Machine
 
 
 class Cache:
-    def __init__(self, car_list, target_lane):
+    def __init__(self, car_list):
         self.cars = car_list
         self.back_notify = False  # No car in backward lane
         self.forw_notify = []
@@ -26,18 +26,17 @@ class Cache:
                     car = self.push_machine.drop()
                     self.lanes[self.push_machine.pos].drop_car(car)
                     self.push_machine.move(3)
-            elif self.back_notify:
+            elif self.push_machine.pos == 4:
                 self.back_notify = False
-                self.push_machine.move(4)
+                car = self.lanes[4].pick_car()
+                self.push_machine.pick(car)
+                self.push_machine.move(car.target_lane())
             else:
-                if self.push_machine.pos == 3:
+                if self.back_notify:
+                    self.push_machine.move(4)
+                else:
                     if len(self.cars) > 0:
                         car = self.cars.pop(0)
-                        self.push_machine.pick(car)
-                        self.push_machine.move(car.target_lane())
-                else:
-                    if self.lanes[4].pickable():
-                        car = self.lanes[4].pick_car()
                         self.push_machine.pick(car)
                         self.push_machine.move(car.target_lane())
 
@@ -45,7 +44,7 @@ class Cache:
             lane.tic()
 
         for idx in [0, 1, 2, 3, 5, 6]:
-            if self.lanes[idx].notify():
+            if self.lanes[idx].notify() and idx not in self.forw_notify:
                 self.forw_notify.append(idx)
         if self.lanes[4].notify():
             self.back_notify = True
@@ -57,30 +56,40 @@ class Cache:
                     car = self.pop_machine.drop()
                     self.end = car
                     if len(self.forw_notify) > 0:
-                        self.pop_machine.move(self.forw_notify[0])
+                        self.pop_machine.move(self.forw_notify.pop(0))
                 else:
                     car = self.pop_machine.drop()
                     if self.lanes[4].dropable():
                         self.lanes[4].drop_car(car)
                         self.pop_machine.move(3)
             else:
-                if self.lanes[self.pop_machine.pos].pickable():
-                    car = self.lanes[self.pop_machine.pos].pick_car()
-                    self.pop_machine.pick(car)
-                    self.pop_machine.move(3 if len(car.aims) == 0 else car.target_lane())
+                if len(self.forw_notify) > 0:
+                    if self.pop_machine.pos != self.forw_notify[0]:
+                        self.pop_machine.move(self.forw_notify.pop(0))
+                    else:
+                        if self.lanes[self.pop_machine.pos].pickable():
+                            car = self.lanes[self.pop_machine.pos].pick_car()
+                            self.pop_machine.pick(car)
+                            self.pop_machine.move(3 if len(car.aims) == 0 else 4)
 
     def print_cache(self):
-        assemble = "  -  " if self.end else f'{self.end.id:<5}'
-        paint = "  -  " if len(self.cars) == 0 else f'{self.cars[0].id:<5}'
-        push_car = "  -  " if self.push_machine.grab is None else f'{self.push_machine.grab.id:<5}'
-        pop_car = "  -  " if self.pop_machine.grab is None else f'{self.pop_machine.grab.id:<5}'
+        assemble = "-    " if self.end is None else f'{self.end.id:<5}'
+        paint = "-    " if len(self.cars) == 0 else f'{self.cars[0].id:<5}'
+        push_car = "-    " if self.push_machine.grab is None else f'{self.push_machine.grab.id:<5}'
+        pop_car = "-    " if self.pop_machine.grab is None else f'{self.pop_machine.grab.id:<5}'
 
+        print(' ' * 10, end='')
         self.lanes[6].print_lane()
+        print(' ' * 10, end='')
         self.lanes[5].print_lane()
+        print(' ' * 10, end='')
         self.lanes[4].print_lane()
-        print(paint, push_car, end='')
+        print(paint + push_car, end='')
         self.lanes[3].print_lane(newline=False)
-        print(pop_car, assemble)
+        print(pop_car + assemble)
+        print(' ' * 10, end='')
         self.lanes[2].print_lane()
+        print(' ' * 10, end='')
         self.lanes[1].print_lane()
+        print(' ' * 10, end='')
         self.lanes[0].print_lane()

@@ -10,10 +10,10 @@ class Lane:
                 l[idx - 1] = car.id
 
         for p in reversed(l):
-            print(f'{p:<4}', end='')
+            print(f'{p:<5}', end='')
 
         if newline:
-            print('\n')
+            print()
 
 
 class ForwardLane(Lane):
@@ -29,7 +29,7 @@ class ForwardLane(Lane):
         return len(self.lane) > 0 and self.lane[0].left_move == 0 and self.lane[0].loc == [1]
 
     def dropable(self):
-        return len(self.lane) == 0 or 10 in self.lane[-1].loc
+        return len(self.lane) == 0 or 10 not in self.lane[-1].loc
 
     def tic(self):
         prev_loc = [0]
@@ -58,7 +58,7 @@ class BackwardLane(Lane):
         return len(self.lane) > 0 and self.lane[0].left_move == 0 and self.lane[0].loc == [10]
 
     def dropable(self):
-        return len(self.lane) == 0 or 1 in self.lane[-1].loc
+        return len(self.lane) == 0 or 1 not in self.lane[-1].loc
 
     def tic(self):
         prev_loc = [11]

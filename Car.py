@@ -27,7 +27,7 @@ class Car:
             self.left_move -= 1
         elif self.left_move == 1:
             self.left_move = 0
-            self.loc = self.loc.pop(0)
+            self.loc.pop(0)
 
     def move_in_lane(self, target, time):
         self.left_move = time
